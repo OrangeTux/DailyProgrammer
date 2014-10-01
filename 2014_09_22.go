@@ -17,49 +17,50 @@ func prompt(prompt string) string {
 	return equation
 }
 
-// Find intersection of 2 linear functions.
-func find_intersection(f_1, f_2 string) (x, y int) {
-	//
-	f_1_a, f_1_b := parse_equation(f_1)
-	f_2_a, f_2_b := parse_equation(f_2)
-
-	y = find_y_intersect(f_1_b, f_2_b)
-	x = find_x_intersect(f_1_a, f_2_a, y)
-
-	return x, y
-}
-
 // Parse a string containg equation in format `ax + b` and return a and b.
-func parse_equation(equation string) (a, b int) {
-	re := regexp.MustCompile("[0-9]*")
+func parse_equation(equation string) (a, b float64) {
+	re := regexp.MustCompile("[+-]?[\\d]*\\.?[\\d]+")
 	result := re.FindAllString(equation, -1)
 
-	//fmt.Printf("%v", len(result))
-	if len(result) != 4 {
+	if len(result) != 1 && len(result) != 2 {
 		fmt.Printf("%s does not match format `ax+b`.\n", equation)
 		os.Exit(1)
 	}
 
-	a, _ = strconv.Atoi(result[0])
-	b, _ = strconv.Atoi(result[2])
+	a, _ = strconv.ParseFloat(result[0], 32)
 
-	//fmt.Printf("%s: a = %v and b = %v.\n", equation, a, b)
+	if len(result) == 2 {
+		b, _ = strconv.ParseFloat(result[1], 32)
+	}
+
+	// When no b value has been geven we b is 0, because of Go's zero default.
 	return a, b
 }
 
+// Find intersection of 2 linear functions.
+func find_intersection(f_1, f_2 string) (x, y float64) {
+	f_1_a, f_1_b := parse_equation(f_1)
+	f_2_a, f_2_b := parse_equation(f_2)
+
+	x = find_x_intersect(f_1_a, f_2_a, f_1_b, f_2_b)
+	y = find_y_intersect(f_1_a, f_1_b, x)
+
+	return x, y
+}
+
 // Return y part of coordinate.
-func find_y_intersect(b_1, b_2 int) (y int) {
-	return b_1 - b_2
+func find_y_intersect(a, b, x float64) (y float64) {
+	return (a * x) + b
 }
 
 // Return x part of coordinate
-func find_x_intersect(a_1, a_2, y_intersect int) (x int) {
-	return y_intersect / (a_2 - a_1)
+func find_x_intersect(a_1, a_2, b_1, b_2 float64) (x float64) {
+	return (b_1 - b_2) / (a_2 - a_1)
 }
 
 func main() {
 	equation_1 := prompt("Enter equation in format 'ax + b': ")
 	equation_2 := prompt("Enter another equation: ")
 	x, y := find_intersection(equation_1, equation_2)
-	fmt.Printf("(%d, %d)\n", x, y)
+	fmt.Printf("(%f, %f)\n", x, y)
 }
